@@ -15,10 +15,13 @@ fn main() -> io::Result<()> {
     {
         let mut writer = BufWriter::new(f);
         let mut rng = thread_rng();
-        for _ in 0..1000000 {
-            let rand_string: String = rng.sample_iter(&Alphanumeric).take(30).collect();
-            writer.write(rand_string.as_bytes())?;
-            writer.write(b"\n")?;
+        for _ in 0..1000 {
+            let mut s: String = String::with_capacity(30 * 1001);
+            for _ in 0..1000 {
+                s.push_str(&rng.sample_iter(&Alphanumeric).take(30).collect::<String>());
+                s += "\n";
+            }
+            writer.write_all(s.as_bytes())?;
         }
     }
     println!("{}", now.elapsed().as_secs());
