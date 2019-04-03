@@ -18,8 +18,9 @@ fn main() -> io::Result<()> {
     let program = args[0].clone();
 
     let mut opts = Options::new();
-    opts.optflag("e", "empty-line", "including empty line");
     opts.optopt("n", "", "set the line length", "LEN");
+    opts.optflag("e", "empty-line", "including empty line");
+    opts.optflag("r", "", "random length");
     opts.optflag("h", "help", "print this help menu");
     match opts.parse(&args[1..]) {
         Ok(m) => {
@@ -28,13 +29,19 @@ fn main() -> io::Result<()> {
                 .unwrap_or(String::from("30"))
                 .parse()
                 .expect("use integer for option -n");
+            let random = m.opt_present("r");
             if m.opt_present("h") {
                 let _ = print_usage(&program, opts);
             }
             if m.opt_present("e") {
-                let _ = generate_file("examples/.large_random_with_empty_line_file.txt", len, true);
+                let _ = generate_file(
+                    "examples/.large_random_with_empty_line_file.txt",
+                    len,
+                    true,
+                    random,
+                );
             }
-            let _ = generate_file("examples/.large_random_file.txt", len, false);
+            let _ = generate_file("examples/.large_random_file.txt", len, false, random);
         }
         Err(e) => panic!(e.to_string()),
     };
@@ -42,21 +49,31 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn generate_file(path: &str, line_length: usize, with_empty_line: bool) -> io::Result<()> {
+fn generate_file(
+    path: &str,
+    line_length: usize,
+    with_empty_line: bool,
+    random_length: bool,
+) -> io::Result<()> {
     let f = File::create(path)?;
     {
         let mut writer = BufWriter::new(f);
         let mut rng = thread_rng();
         for _ in 0..1000 {
-            let mut s: String = String::with_capacity(30 * 1001);
+            let mut s: String = String::with_capacity(line_length * 1001);
             for _ in 0..1000 {
+                let length = if random_length {
+                    rng.gen_range(1, line_length)
+                } else {
+                    line_length
+                };
                 if with_empty_line {
                     if rng.gen_bool(0.001) {
                         s.push_str("\n");
                     } else {
                         s.push_str(
                             &rng.sample_iter(&Alphanumeric)
-                                .take(line_length)
+                                .take(length)
                                 .collect::<String>(),
                         );
                         s += "\n";
@@ -64,7 +81,7 @@ fn generate_file(path: &str, line_length: usize, with_empty_line: bool) -> io::R
                 } else {
                     s.push_str(
                         &rng.sample_iter(&Alphanumeric)
-                            .take(line_length)
+                            .take(length)
                             .collect::<String>(),
                     );
                     s += "\n";
