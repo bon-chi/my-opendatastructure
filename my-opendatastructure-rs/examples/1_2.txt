@@ -1,0 +1,3 @@
+stack's push is dyck word's +1
+stack's pop is dyck word's -1
+array made from stack's operation is valid dyck word.
