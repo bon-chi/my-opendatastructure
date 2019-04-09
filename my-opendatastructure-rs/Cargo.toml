@@ -9,4 +9,8 @@ edition = "2018"
 [dev-dependencies]
 rand = "0.6"
 getopts = "0.2"
+criterion = "0.2"
 
+[[bench]]
+name = "my_benchmark"
+harness = false

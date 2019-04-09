@@ -1,0 +1,23 @@
+pub trait List<T> {
+    fn size(&self) -> usize;
+    fn get(&self, index: usize) -> Option<&T>;
+    fn set(&mut self, index: usize, x: T);
+    fn add(&mut self, index: usize, x: T);
+    fn remove(&mut self, index: usize) -> T;
+}
+
+trait USet<T> {
+    fn size(&self) -> usize;
+    fn add(&mut self, x: T) -> bool;
+    fn remove(&mut self, x: &T) -> Option<T>;
+    fn find(&self, x: &T) -> Option<T>;
+}
+
+trait SSet<T> {
+    fn size(&self) -> usize;
+    fn add(&mut self, x: T) -> bool;
+    fn remove(&mut self, x: &T) -> Option<T>;
+    fn find(&self, x: &T) -> Option<T>;
+}
+
+pub mod naive_implementation;
