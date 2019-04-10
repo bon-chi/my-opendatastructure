@@ -6,12 +6,17 @@ pub trait List<T> {
     fn remove(&mut self, index: usize) -> T;
 }
 
-trait USet<T> {
+trait USet<T: Eq> {
     fn size(&self) -> usize;
     fn add(&mut self, x: T) -> bool;
-    fn remove(&mut self, x: &T) -> Option<T>;
-    fn find(&self, x: &T) -> Option<T>;
+    // fn remove(&mut self, x: &T) -> Option<T>;
+    // fn find(&self, x: &T) -> Option<T>;
 }
+
+// pub trait HasKey {
+//     type Key;
+//     fn key(&self) -> Self::Key;
+// }
 
 trait SSet<T> {
     fn size(&self) -> usize;

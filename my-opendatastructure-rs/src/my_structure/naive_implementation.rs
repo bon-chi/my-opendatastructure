@@ -1,5 +1,9 @@
+#[allow(unused_assignments)]
 use crate::my_structure::{List, SSet, USet};
+#[derive(Debug)]
 pub struct MyList<T>(Vec<T>);
+#[derive(Debug)]
+pub struct MyUSet<T: Eq>(Vec<T>);
 
 impl<T> MyList<T> {
     pub fn new(vec: Vec<T>) -> Self {
@@ -28,6 +32,32 @@ impl<T> List<T> for MyList<T> {
 
     fn remove(&mut self, index: usize) -> T {
         self.0.remove(index)
+    }
+}
+
+impl<T: Eq> MyUSet<T> {
+    pub fn new(vec: Vec<T>) -> Self {
+        let mut unique_vec = Vec::with_capacity(vec.len());
+        for e in vec {
+            if !unique_vec.contains(&e) {
+                unique_vec.push(e);
+            }
+        }
+        MyUSet(unique_vec)
+    }
+}
+
+impl<T: Eq> USet<T> for MyUSet<T> {
+    fn size(&self) -> usize {
+        self.0.len()
+    }
+
+    fn add(&mut self, x: T) -> bool {
+        if self.0.contains(&x) {
+            return false;
+        }
+        self.0.push(x);
+        true
     }
 }
 
@@ -70,5 +100,22 @@ mod tests {
         assert_eq!(my_list.remove(1), 2);
         assert_eq!(my_list.size(), 2);
         assert_eq!(my_list.get(1), Some(&3));
+    }
+
+    use crate::my_structure::naive_implementation::MyUSet;
+    use crate::my_structure::USet;
+    #[test]
+    fn uset_size() {
+        let my_uset = MyUSet::new(vec![1, 2, 3]);
+        assert_eq!(my_uset.size(), 3);
+    }
+
+    #[test]
+    fn uset_add() {
+        let mut my_uset = MyUSet::new(vec![1, 2, 3]);
+        assert_eq!(my_uset.add(4), true);
+        assert_eq!(my_uset.add(4), false);
+        println!("{:?}", my_uset);
+        assert_eq!(my_uset.size(), 4);
     }
 }
