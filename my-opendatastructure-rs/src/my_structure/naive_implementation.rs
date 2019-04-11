@@ -59,6 +59,21 @@ impl<T: Eq> USet<T> for MyUSet<T> {
         self.0.push(x);
         true
     }
+
+    fn remove(&mut self, x: &T) -> Option<T> {
+        if let Some(index) = self.0.iter().position(|e| e == x) {
+            Some(self.0.remove(index))
+        } else {
+            None
+        }
+    }
+    fn find(&self, x: &T) -> Option<&T> {
+        if let Some(index) = self.0.iter().position(|e| e == x) {
+            self.0.get(index)
+        } else {
+            None
+        }
+    }
 }
 
 #[cfg(test)]
@@ -104,6 +119,15 @@ mod tests {
 
     use crate::my_structure::naive_implementation::MyUSet;
     use crate::my_structure::USet;
+    #[derive(Debug)]
+    struct Tuple(usize, usize);
+    impl PartialEq for Tuple {
+        fn eq(&self, other: &Self) -> bool {
+            self.0 == other.0
+        }
+    }
+    impl Eq for Tuple {}
+
     #[test]
     fn uset_size() {
         let my_uset = MyUSet::new(vec![1, 2, 3]);
@@ -115,7 +139,29 @@ mod tests {
         let mut my_uset = MyUSet::new(vec![1, 2, 3]);
         assert_eq!(my_uset.add(4), true);
         assert_eq!(my_uset.add(4), false);
-        println!("{:?}", my_uset);
         assert_eq!(my_uset.size(), 4);
+        let mut my_uset = MyUSet::new(vec![Tuple(1, 11), Tuple(2, 22), Tuple(3, 33)]);
+        assert_eq!(my_uset.add(Tuple(4, 44)), true);
+        assert_eq!(my_uset.add(Tuple(4, 40)), false);
+    }
+
+    #[test]
+    fn uset_remove() {
+        let mut my_uset = MyUSet::new(vec![1, 2, 3]);
+        assert_eq!(my_uset.remove(&2), Some(2));
+        assert_eq!(my_uset.size(), 2);
+        assert_eq!(my_uset.remove(&4), None);
+        assert_eq!(my_uset.size(), 2);
+        let mut my_uset = MyUSet::new(vec![Tuple(1, 11), Tuple(2, 22), Tuple(3, 33)]);
+        assert_eq!(my_uset.remove(&Tuple(2, 0)), Some(Tuple(2, 22)));
+        assert_eq!(my_uset.size(), 2);
+        assert_eq!(my_uset.remove(&Tuple(4, 40)), None);
+    }
+
+    #[test]
+    fn uset_find() {
+        let my_uset = MyUSet::new(vec![Tuple(1, 11), Tuple(2, 22), Tuple(3, 33)]);
+        assert_eq!(my_uset.find(&Tuple(2, 0)), Some(&Tuple(2, 22)));
+        assert_eq!(my_uset.find(&Tuple(4, 40)), None);
     }
 }
