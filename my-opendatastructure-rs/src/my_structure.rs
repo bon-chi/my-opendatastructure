@@ -13,12 +13,7 @@ trait USet<T: Eq> {
     fn find(&self, x: &T) -> Option<&T>;
 }
 
-// pub trait HasKey {
-//     type Key;
-//     fn key(&self) -> Self::Key;
-// }
-
-trait SSet<T> {
+trait SSet<T: Eq + Ord> {
     fn size(&self) -> usize;
     fn add(&mut self, x: T) -> bool;
     fn remove(&mut self, x: &T) -> Option<T>;

@@ -4,6 +4,8 @@ use crate::my_structure::{List, SSet, USet};
 pub struct MyList<T>(Vec<T>);
 #[derive(Debug)]
 pub struct MyUSet<T: Eq>(Vec<T>);
+#[derive(Debug)]
+pub struct MySSet<T: Eq + Ord>(Vec<T>);
 
 impl<T> MyList<T> {
     pub fn new(vec: Vec<T>) -> Self {
@@ -69,6 +71,51 @@ impl<T: Eq> USet<T> for MyUSet<T> {
     }
     fn find(&self, x: &T) -> Option<&T> {
         if let Some(index) = self.0.iter().position(|e| e == x) {
+            self.0.get(index)
+        } else {
+            None
+        }
+    }
+}
+
+impl<T: Eq + Ord> MySSet<T> {
+    pub fn new(vec: Vec<T>) -> Self {
+        let unique_vec = Vec::with_capacity(vec.len());
+        let mut my_set = MySSet(unique_vec);
+        for e in vec {
+            my_set.add(e);
+        }
+        my_set
+    }
+}
+
+impl<T: Eq + Ord> SSet<T> for MySSet<T> {
+    fn size(&self) -> usize {
+        self.0.len()
+    }
+
+    fn add(&mut self, x: T) -> bool {
+        if self.0.contains(&x) {
+            false
+        } else {
+            if let Some(index) = self.0.iter().position(|e| e <= &x) {
+                self.0.insert(index, x)
+            } else {
+                self.0.push(x);
+            }
+            true
+        }
+    }
+
+    fn remove(&mut self, x: &T) -> Option<T> {
+        if let Some(index) = self.0.iter().position(|e| e == x) {
+            Some(self.0.remove(index))
+        } else {
+            None
+        }
+    }
+    fn find(&self, x: &T) -> Option<&T> {
+        if let Some(index) = self.0.iter().position(|e| e <= x) {
             self.0.get(index)
         } else {
             None
@@ -163,5 +210,35 @@ mod tests {
         let my_uset = MyUSet::new(vec![Tuple(1, 11), Tuple(2, 22), Tuple(3, 33)]);
         assert_eq!(my_uset.find(&Tuple(2, 0)), Some(&Tuple(2, 22)));
         assert_eq!(my_uset.find(&Tuple(4, 40)), None);
+    }
+
+    use crate::my_structure::naive_implementation::MySSet;
+    use crate::my_structure::SSet;
+    #[derive(Debug)]
+    struct OTuple(usize, usize);
+    impl PartialEq for OTuple {
+        fn eq(&self, other: &Self) -> bool {
+            self.0 == other.0
+        }
+    }
+    impl Eq for OTuple {}
+    use std::cmp::Ordering;
+    impl Ord for OTuple {
+        fn cmp(&self, other: &OTuple) -> Ordering {
+            self.0.cmp(&other.0)
+        }
+    }
+    impl PartialOrd for OTuple {
+        fn partial_cmp(&self, other: &OTuple) -> Option<Ordering> {
+            Some(self.0.cmp(&other.0))
+        }
+    }
+    #[test]
+    fn sset_test() {
+        let mut my_sset = MySSet::new(vec![OTuple(2, 22), OTuple(5, 55), OTuple(1, 11)]);
+        my_sset.add(OTuple(4, 4));
+        assert_eq!(my_sset.find(&OTuple(2, 0)), Some(&OTuple(2, 22)));
+        assert_eq!(my_sset.find(&OTuple(4, 40)), Some(&OTuple(4, 4)));
+        assert_eq!(my_sset.find(&OTuple(5, 5)), Some(&OTuple(5, 55)));
     }
 }
