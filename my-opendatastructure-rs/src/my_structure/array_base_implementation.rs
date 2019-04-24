@@ -36,7 +36,7 @@ impl<T: Clone> List<T> for ArrayStack<T> {
     }
 
     fn add(&mut self, index: usize, x: T) {
-        if self.n + 1 >= self.a.len() {
+        if self.n + 1 >= self.a.capacity() {
             self.resize();
         }
         for j in ((index + 1)..=(self.n)).rev() {
@@ -55,7 +55,7 @@ impl<T: Clone> List<T> for ArrayStack<T> {
             self.a[j] = self.a[j + 1].clone();
         }
         self.n -= 1;
-        if self.a.len() >= 3 * self.n {
+        if self.a.capacity() >= 3 * self.n {
             self.resize();
         }
         Some(x)
@@ -97,7 +97,7 @@ impl<T: Clone> List<T> for FastArrayStack<T> {
     }
 
     fn add(&mut self, index: usize, x: T) {
-        if self.n + 1 >= self.a.len() {
+        if self.n + 1 >= self.a.capacity() {
             self.resize();
         }
         self.a.insert(index, x);
