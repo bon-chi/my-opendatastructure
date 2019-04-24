@@ -20,4 +20,5 @@ trait SSet<T: Eq + Ord> {
     fn find(&self, x: &T) -> Option<&T>;
 }
 
+pub mod array_base_implementation;
 pub mod naive_implementation;
