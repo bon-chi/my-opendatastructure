@@ -6,6 +6,11 @@ pub trait List<T> {
     fn remove(&mut self, index: usize) -> Option<T>;
 }
 
+pub trait Queue<T> {
+    fn add(&mut self, x: T);
+    fn remove(&mut self) -> Option<T>;
+}
+
 trait USet<T: Eq> {
     fn size(&self) -> usize;
     fn add(&mut self, x: T) -> bool;

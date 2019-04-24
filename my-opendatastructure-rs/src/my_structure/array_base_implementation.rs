@@ -1,4 +1,4 @@
-use crate::my_structure::List;
+use crate::my_structure::{List, Queue};
 struct ArrayStack<T> {
     n: usize,
     a: Vec<T>,
@@ -112,7 +112,44 @@ impl<T: Clone> List<T> for FastArrayStack<T> {
             self.a[j] = self.a[j + 1].clone();
         }
         self.n -= 1;
-        if self.a.len() >= 3 * self.n {
+        if self.a.capacity() >= 3 * self.n {
+            self.resize();
+        }
+        Some(x)
+    }
+}
+
+struct ArrayQueue<T> {
+    a: Vec<T>,
+    j: usize,
+    n: usize,
+}
+
+impl<T: Clone> ArrayQueue<T> {
+    fn resize(&mut self) {
+        let mut b = Vec::with_capacity(std::cmp::max(1, 2 * self.n));
+        for k in 0..self.n {
+            b[k] = self.a[(self.j + k) % self.a.capacity()].clone();
+        }
+        self.a = b;
+    }
+}
+
+impl<T: Clone> Queue<T> for ArrayQueue<T> {
+    fn add(&mut self, x: T) {
+        if self.n + 1 >= self.a.capacity() {
+            self.resize();
+        }
+        let len = self.a.capacity();
+        self.a[(self.j + self.n) % len] = x;
+        self.n += 1;
+    }
+
+    fn remove(&mut self) -> Option<T> {
+        let x = self.a.swap_remove(self.j);
+        self.j = (self.j + 1) % self.a.capacity();
+        self.n -= 1;
+        if self.a.capacity() >= 3 * self.n {
             self.resize();
         }
         Some(x)
