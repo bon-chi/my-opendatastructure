@@ -13,7 +13,7 @@ impl<T> MyList<T> {
     }
 }
 
-impl<T> List<T> for MyList<T> {
+impl<T: Clone> List<T> for MyList<T> {
     fn size(&self) -> usize {
         self.0.len()
     }
@@ -22,18 +22,18 @@ impl<T> List<T> for MyList<T> {
         self.0.get(index)
     }
 
-    fn set(&mut self, index: usize, x: T) {
-        if let Some(elem) = self.0.get_mut(index) {
-            *elem = x;
-        }
+    fn set(&mut self, index: usize, x: T) -> Option<T> {
+        let y = self.0[index].clone();
+        self.0[index] = x;
+        Some(y)
     }
 
     fn add(&mut self, index: usize, x: T) {
         self.0.insert(index, x)
     }
 
-    fn remove(&mut self, index: usize) -> T {
-        self.0.remove(index)
+    fn remove(&mut self, index: usize) -> Option<T> {
+        Some(self.0.remove(index))
     }
 }
 
@@ -159,7 +159,7 @@ mod tests {
     #[test]
     fn list_remove() {
         let mut my_list = MyList::new(vec![1, 2, 3]);
-        assert_eq!(my_list.remove(1), 2);
+        assert_eq!(my_list.remove(1), Some(2));
         assert_eq!(my_list.size(), 2);
         assert_eq!(my_list.get(1), Some(&3));
     }

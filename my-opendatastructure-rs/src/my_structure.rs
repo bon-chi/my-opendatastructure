@@ -1,9 +1,9 @@
 pub trait List<T> {
     fn size(&self) -> usize;
     fn get(&self, index: usize) -> Option<&T>;
-    fn set(&mut self, index: usize, x: T);
+    fn set(&mut self, index: usize, x: T) -> Option<T>;
     fn add(&mut self, index: usize, x: T);
-    fn remove(&mut self, index: usize) -> T;
+    fn remove(&mut self, index: usize) -> Option<T>;
 }
 
 trait USet<T: Eq> {
