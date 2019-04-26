@@ -188,10 +188,10 @@ impl<T: Clone> List<T> for ArrayDeque<T> {
         x_slice.into_iter().last()
     }
     fn add(&mut self, index: usize, x: T) {
-        if (self.n + 1 >= self.a.capacity()) {
+        if self.n + 1 >= self.a.capacity() {
             self.resize();
         }
-        if (index < self.n / 2) {
+        if index < self.n / 2 {
             self.j = if self.j == 0 {
                 self.a.capacity() - 1
             } else {
@@ -219,7 +219,7 @@ impl<T: Clone> List<T> for ArrayDeque<T> {
             return None;
         }
         let x = self.a[(self.j + index) % self.a.capacity()].clone();
-        if (index < self.n / 2) {
+        if index < self.n / 2 {
             for k in (1..=index).rev() {
                 let physical_index = (self.j + k) % self.a.capacity();
                 let prev_physical_index = (self.j + k - 1) % self.a.capacity();
