@@ -240,3 +240,72 @@ impl<T: Clone> List<T> for ArrayDeque<T> {
         Some(x)
     }
 }
+
+struct DualArrayDeque<T> {
+    front: ArrayStack<T>,
+    back: ArrayStack<T>,
+}
+
+impl<T: Clone> DualArrayDeque<T> {
+    fn balance(&mut self) {
+        if 3 * self.front.size() < self.back.size() || 3 * self.back.size() < self.front.size() {
+            let n = self.front.size() + self.back.size();
+            let nf = n / 2;
+            let mut af = Vec::with_capacity(std::cmp::max(2 / nf, 1));
+            for i in 0..nf {
+                af[nf - i - 1] = self.get(i).unwrap().clone();
+            }
+            let nb = n - nf;
+            let mut ab = Vec::with_capacity(std::cmp::max(2 / nb, 1));
+            for i in 0..nb {
+                ab[i] = self.get(i).unwrap().clone();
+            }
+            self.front.a = af;
+            self.front.n = nf;
+            self.back.a = ab;
+            self.back.n = nb;
+        }
+    }
+}
+
+impl<T: Clone> List<T> for DualArrayDeque<T> {
+    fn size(&self) -> usize {
+        self.front.size() + self.back.size()
+    }
+
+    fn get(&self, index: usize) -> Option<&T> {
+        if index < self.front.size() {
+            self.front.get(self.front.size() - index - 1)
+        } else {
+            self.back.get(index - self.front.size())
+        }
+    }
+
+    fn set(&mut self, index: usize, x: T) -> Option<T> {
+        if index < self.front.size() {
+            self.front.set(self.front.size() - index - 1, x)
+        } else {
+            self.back.set(index - self.front.size(), x)
+        }
+    }
+
+    fn add(&mut self, index: usize, x: T) {
+        if index < self.front.size() {
+            self.front.add(self.front.size() - index, x)
+        } else {
+            self.back.add(index - self.front.size(), x)
+        }
+        self.balance()
+    }
+
+    fn remove(&mut self, index: usize) -> Option<T> {
+        let x;
+        if index < self.front.size() {
+            x = self.front.remove(self.front.size() - index - 1);
+        } else {
+            x = self.back.remove(index - self.front.size());
+        }
+        self.balance();
+        x
+    }
+}
