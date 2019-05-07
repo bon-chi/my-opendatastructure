@@ -1,4 +1,6 @@
 use crate::my_structure::{List, Queue};
+use std::mem::swap;
+
 struct ArrayStack<T> {
     n: usize,
     a: Vec<T>,
@@ -8,9 +10,21 @@ impl<T: Clone> ArrayStack<T> {
     fn resize(&mut self) {
         let mut b = Vec::with_capacity(std::cmp::max(1, 2 / self.n));
         for i in 0..self.n {
-            b[i] = self.a[i].clone();
+            swap(&mut b[i], &mut self.a[i]);
         }
         self.a = b;
+    }
+}
+
+impl<T> MutGet<T> for ArrayStack<T>
+where
+    Self: List<T>,
+{
+    fn mut_get(&mut self, index: usize) -> Option<&mut T> {
+        if index >= self.size() {
+            return None;
+        }
+        Some(&mut self.a[index])
     }
 }
 
@@ -30,9 +44,7 @@ impl<T: Clone> List<T> for ArrayStack<T> {
         if index >= self.size() {
             return None;
         }
-        let y = self.a[index].clone();
-        self.a[index] = x;
-        Some(y)
+        Some(std::mem::replace(&mut self.a[index], x))
     }
 
     fn add(&mut self, index: usize, x: T) {
@@ -40,7 +52,7 @@ impl<T: Clone> List<T> for ArrayStack<T> {
             self.resize();
         }
         for j in ((index + 1)..=(self.n)).rev() {
-            self.a[j] = self.a[j - 1].clone();
+            self.a.swap(j - 1, j)
         }
         self.a[index] = x;
         self.n += 1;
@@ -50,10 +62,7 @@ impl<T: Clone> List<T> for ArrayStack<T> {
         if index >= self.size() {
             return None;
         }
-        let x = self.a[index].clone();
-        for j in index..(self.n) {
-            self.a[j] = self.a[j + 1].clone();
-        }
+        let x = self.a.remove(index);
         self.n -= 1;
         if self.a.capacity() >= 3 * self.n {
             self.resize();
@@ -107,10 +116,7 @@ impl<T: Clone> List<T> for FastArrayStack<T> {
         if index >= self.size() {
             return None;
         }
-        let x = self.a[index].clone();
-        for j in index..(self.n) {
-            self.a[j] = self.a[j + 1].clone();
-        }
+        let x = self.a.remove(index);
         self.n -= 1;
         if self.a.capacity() >= 3 * self.n {
             self.resize();
@@ -128,8 +134,9 @@ struct ArrayQueue<T> {
 impl<T: Clone> ArrayQueue<T> {
     fn resize(&mut self) {
         let mut b = Vec::with_capacity(std::cmp::max(1, 2 * self.n));
+        let capacity = self.a.capacity();
         for k in 0..self.n {
-            b[k] = self.a[(self.j + k) % self.a.capacity()].clone();
+            swap(&mut b[k], &mut self.a[(self.j + k) % capacity]);
         }
         self.a = b;
     }
@@ -146,7 +153,7 @@ impl<T: Clone> Queue<T> for ArrayQueue<T> {
     }
 
     fn remove(&mut self) -> Option<T> {
-        let x = self.a.swap_remove(self.j);
+        let x = self.a.remove(self.j);
         self.j = (self.j + 1) % self.a.capacity();
         self.n -= 1;
         if self.a.capacity() >= 3 * self.n {
@@ -200,13 +207,13 @@ impl<T: Clone> List<T> for ArrayDeque<T> {
             for k in 0..(self.j - 1) {
                 let physical_index = (self.j + k) % self.a.capacity();
                 let next_physical_index = (self.j + k + 1) % self.a.capacity();
-                self.a[physical_index] = self.a[next_physical_index].clone();
+                self.a.swap(physical_index, next_physical_index);
             }
         } else {
             for k in ((index + 1)..=(self.n)).rev() {
                 let physical_index = (self.j + k) % self.a.capacity();
                 let prev_physical_index = (self.j + k - 1) % self.a.capacity();
-                self.a[physical_index] = self.a[prev_physical_index].clone();
+                self.a.swap(physical_index, prev_physical_index)
             }
         }
         let i = (self.j + index) % self.a.capacity();
@@ -218,19 +225,29 @@ impl<T: Clone> List<T> for ArrayDeque<T> {
         if index >= self.size() {
             return None;
         }
-        let x = self.a[(self.j + index) % self.a.capacity()].clone();
+        let x: T;
         if index < self.n / 2 {
             for k in (1..=index).rev() {
                 let physical_index = (self.j + k) % self.a.capacity();
                 let prev_physical_index = (self.j + k - 1) % self.a.capacity();
-                self.a[physical_index] = self.a[prev_physical_index].clone();
+                self.a.swap(physical_index, prev_physical_index);
+                // swap(&mut self.a[prev_physical_index], &mut x);
             }
+            let x_index = (self.j + 1) % self.a.capacity();
+            unsafe {
+                x = std::mem::transmute_copy(&self.a[x_index]);
+            }
+
             self.j = (self.j + 1) % self.a.capacity();
         } else {
             for k in index..(self.n - 1) {
                 let physical_index = (self.j + k) % self.a.capacity();
                 let next_physical_index = (self.j + k + 1) % self.a.capacity();
-                self.a[physical_index] = self.a[next_physical_index].clone();
+                self.a.swap(physical_index, next_physical_index);
+            }
+            let x_index = (self.j + self.n - 2) % self.a.capacity();
+            unsafe {
+                x = std::mem::transmute_copy(&self.a[x_index]);
             }
         }
         self.n -= 1;
@@ -246,6 +263,10 @@ struct DualArrayDeque<T> {
     back: ArrayStack<T>,
 }
 
+trait MutGet<T> {
+    fn mut_get(&mut self, index: usize) -> Option<&mut T>;
+}
+
 impl<T: Clone> DualArrayDeque<T> {
     fn balance(&mut self) {
         if 3 * self.front.size() < self.back.size() || 3 * self.back.size() < self.front.size() {
@@ -253,17 +274,27 @@ impl<T: Clone> DualArrayDeque<T> {
             let nf = n / 2;
             let mut af = Vec::with_capacity(std::cmp::max(2 / nf, 1));
             for i in 0..nf {
-                af[nf - i - 1] = self.get(i).unwrap().clone();
+                swap(&mut af[nf - i - 1], self.mut_get(i).unwrap());
             }
             let nb = n - nf;
             let mut ab = Vec::with_capacity(std::cmp::max(2 / nb, 1));
             for i in 0..nb {
-                ab[i] = self.get(i).unwrap().clone();
+                swap(&mut ab[i], self.mut_get(i).unwrap());
             }
             self.front.a = af;
             self.front.n = nf;
             self.back.a = ab;
             self.back.n = nb;
+        }
+    }
+}
+
+impl<T: Clone> MutGet<T> for DualArrayDeque<T> {
+    fn mut_get(&mut self, index: usize) -> Option<&mut T> {
+        if index < self.front.size() {
+            self.front.mut_get(self.front.size() - index - 1)
+        } else {
+            self.back.mut_get(index - self.front.size())
         }
     }
 }

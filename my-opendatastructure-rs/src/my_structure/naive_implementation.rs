@@ -13,7 +13,7 @@ impl<T> MyList<T> {
     }
 }
 
-impl<T: Clone> List<T> for MyList<T> {
+impl<T> List<T> for MyList<T> {
     fn size(&self) -> usize {
         self.0.len()
     }
@@ -23,9 +23,7 @@ impl<T: Clone> List<T> for MyList<T> {
     }
 
     fn set(&mut self, index: usize, x: T) -> Option<T> {
-        let y = self.0[index].clone();
-        self.0[index] = x;
-        Some(y)
+        Some(std::mem::replace(&mut self.0[index], x))
     }
 
     fn add(&mut self, index: usize, x: T) {
