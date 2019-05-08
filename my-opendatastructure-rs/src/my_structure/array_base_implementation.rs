@@ -6,7 +6,7 @@ struct ArrayStack<T> {
     a: Vec<T>,
 }
 
-impl<T: Clone> ArrayStack<T> {
+impl<T> ArrayStack<T> {
     fn resize(&mut self) {
         let mut b = Vec::with_capacity(std::cmp::max(1, 2 / self.n));
         for i in 0..self.n {
@@ -28,7 +28,7 @@ where
     }
 }
 
-impl<T: Clone> List<T> for ArrayStack<T> {
+impl<T> List<T> for ArrayStack<T> {
     fn size(&self) -> usize {
         self.n
     }
@@ -84,7 +84,7 @@ impl<T> FastArrayStack<T> {
     }
 }
 
-impl<T: Clone> List<T> for FastArrayStack<T> {
+impl<T> List<T> for FastArrayStack<T> {
     fn size(&self) -> usize {
         self.n
     }
@@ -131,7 +131,7 @@ struct ArrayQueue<T> {
     n: usize,
 }
 
-impl<T: Clone> ArrayQueue<T> {
+impl<T> ArrayQueue<T> {
     fn resize(&mut self) {
         let mut b = Vec::with_capacity(std::cmp::max(1, 2 * self.n));
         let capacity = self.a.capacity();
@@ -142,7 +142,7 @@ impl<T: Clone> ArrayQueue<T> {
     }
 }
 
-impl<T: Clone> Queue<T> for ArrayQueue<T> {
+impl<T> Queue<T> for ArrayQueue<T> {
     fn add(&mut self, x: T) {
         if self.n + 1 >= self.a.capacity() {
             self.resize();
@@ -173,7 +173,7 @@ impl<T> ArrayDeque<T> {
     fn resize(&mut self) {}
 }
 
-impl<T: Clone> List<T> for ArrayDeque<T> {
+impl<T> List<T> for ArrayDeque<T> {
     fn size(&self) -> usize {
         self.n
     }
@@ -267,7 +267,7 @@ trait MutGet<T> {
     fn mut_get(&mut self, index: usize) -> Option<&mut T>;
 }
 
-impl<T: Clone> DualArrayDeque<T> {
+impl<T> DualArrayDeque<T> {
     fn balance(&mut self) {
         if 3 * self.front.size() < self.back.size() || 3 * self.back.size() < self.front.size() {
             let n = self.front.size() + self.back.size();
@@ -289,7 +289,7 @@ impl<T: Clone> DualArrayDeque<T> {
     }
 }
 
-impl<T: Clone> MutGet<T> for DualArrayDeque<T> {
+impl<T> MutGet<T> for DualArrayDeque<T> {
     fn mut_get(&mut self, index: usize) -> Option<&mut T> {
         if index < self.front.size() {
             self.front.mut_get(self.front.size() - index - 1)
@@ -299,7 +299,7 @@ impl<T: Clone> MutGet<T> for DualArrayDeque<T> {
     }
 }
 
-impl<T: Clone> List<T> for DualArrayDeque<T> {
+impl<T> List<T> for DualArrayDeque<T> {
     fn size(&self) -> usize {
         self.front.size() + self.back.size()
     }
