@@ -340,3 +340,73 @@ impl<T> List<T> for DualArrayDeque<T> {
         x
     }
 }
+
+struct RootishArrayStack<T> {
+    blocks: ArrayStack<Vec<T>>,
+    n: usize,
+}
+
+impl<T> RootishArrayStack<T> {
+    fn i2b(index: usize) -> usize {
+        let db = (-3.0 + (9.0 + 8.0 * (index as f32))) / 2.0;
+        db.ceil() as usize
+    }
+
+    fn grow(&mut self) {}
+    fn shrink(&mut self) {}
+    fn replace(&mut self, i: usize, i2: usize) {
+        let b = Self::i2b(i);
+        let b2 = Self::i2b(i2);
+        let rest_block_b = b2 - b - 1;
+        let j = i - b * (b + 1) / 2;
+        let j2 = i2 - b2 * (b2 + 1) / 2;
+        let (blocks1, rest_blocks) = self.blocks.a.split_at_mut(b + 1);
+        std::mem::swap(&mut blocks1[b][j], &mut rest_blocks[rest_block_b][j2]);
+    }
+}
+
+impl<T> List<T> for RootishArrayStack<T> {
+    fn size(&self) -> usize {
+        self.n
+    }
+
+    fn get(&self, index: usize) -> Option<&T> {
+        let b = Self::i2b(index);
+        let j = index - b * (b + 1) / 2;
+        self.blocks
+            .get(b as usize)
+            .map({ |block| &block[j as usize] })
+    }
+
+    fn set(&mut self, index: usize, x: T) -> Option<T> {
+        let b = Self::i2b(index);
+        let j = index - b * (b + 1) / 2;
+        let block = self.blocks.mut_get(b as usize);
+        block.map(|block| std::mem::replace(&mut block[j], x))
+    }
+
+    fn add(&mut self, index: usize, x: T) {
+        let r = self.blocks.size();
+        if r * (r + 1) / 2 < self.n + 1 {
+            self.grow();
+        }
+        self.n += 1;
+        for j in ((index + 1)..=(self.n - 1)).rev() {
+            self.replace(j - 1, j)
+        }
+        self.set(index, x);
+    }
+
+    fn remove(&mut self, index: usize) -> Option<T> {
+        for j in index..(self.n - 1) {
+            self.replace(j, j + 1);
+        }
+        let r = self.blocks.size();
+        let x = self.blocks.a[r].remove(self.n - (r * (r - 1) / 2) - 1);
+        self.n -= 1;
+        if (r - 2) * (r - 1) / 2 >= self.n {
+            self.shrink();
+        }
+        Some(x)
+    }
+}
