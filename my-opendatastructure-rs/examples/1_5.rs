@@ -3,163 +3,144 @@ use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
 
 fn main() {
-    let mut set = HashSet::new();
-    set.insert(KeyValues {
-        key: 1,
-        values: vec![1],
-    });
-
-    let mut bag = Bag(set);
-
-    println!("start: {:?}", bag);
-    bag.add(1);
-    println!("add: {:?}", bag);
-    bag.add(2);
-    println!("add: {:?}", bag);
-    bag.add(3);
-    println!("add: {:?}", bag);
-    println!("find: {:?}", bag.find(1));
-    println!("find: {:?}", bag.find(2));
-    println!("find: {:?}", bag.find(3));
-    println!("find: {:?}", bag.find_all(1));
-    println!("find: {:?}", bag.find_all(2));
-    println!("find: {:?}", bag.find_all(3));
-    bag.remove(1);
-    println!("remove: {:?}", bag);
-    bag.remove(2);
-    println!("remove: {:?}", bag);
-    bag.remove(3);
-    println!("remove: {:?}", bag);
-
-    let mut set = HashSet::new();
-    let first = Human {
-        name: String::from("a"),
-        height: 150,
-    };
-    set.insert(KeyValues {
-        key: first.clone(),
-        values: vec![first],
-    });
-    let mut bag = Bag(set);
-    let a = Human {
-        name: String::from("a"),
-        height: 155,
-    };
-    let b = Human {
-        name: String::from("b"),
-        height: 157,
-    };
-    let c = Human {
-        name: String::from("c"),
-        height: 160,
-    };
-    println!("start: {:?}", bag);
-    bag.add(a.clone());
-    println!("add: {:?}", bag);
-    bag.add(b.clone());
-    println!("add: {:?}", bag);
-    bag.add(c.clone());
-    println!("add: {:?}", bag);
-    println!("find: {:?}", bag.find(a.clone()));
-    println!("find: {:?}", bag.find(b.clone()));
-    println!("find: {:?}", bag.find(c.clone()));
-    println!("find: {:?}", bag.find_all(a.clone()));
-    println!("find: {:?}", bag.find_all(b.clone()));
-    println!("find: {:?}", bag.find_all(c.clone()));
-    bag.remove(a.clone());
-    println!("remove: {:?}", bag);
-    bag.remove(b.clone());
-    println!("remove: {:?}", bag);
-    bag.remove(c.clone());
-    println!("remove: {:?}", bag);
-}
-
-#[derive(Debug, Clone)]
-struct Human {
-    name: String,
-    height: i32,
-}
-
-impl PartialEq for Human {
-    fn eq(&self, other: &Self) -> bool {
-        self.name == other.name
-    }
-}
-
-impl Eq for Human {}
-
-impl Hash for Human {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.name.hash(state);
-    }
-}
-
-#[derive(Debug)]
-struct Bag<T: Hash + Eq + PartialEq + Debug + Clone>(USet<T>);
-
-type USet<T> = HashSet<KeyValues<T>>;
-
-#[derive(Debug)]
-struct KeyValues<T: Hash + Eq + PartialEq + Debug> {
-    key: T,
-    values: Vec<T>,
-}
-
-impl<T: Hash + Eq + PartialEq + Debug> PartialEq for KeyValues<T> {
-    fn eq(&self, other: &Self) -> bool {
-        self.key == other.key
-    }
-}
-
-impl<T: Hash + Eq + PartialEq + Debug> Eq for KeyValues<T> {}
-
-impl<T: Hash + Eq + PartialEq + Debug> Hash for KeyValues<T> {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.key.hash(state);
-    }
-}
-
-impl<T: Hash + Eq + PartialEq + Debug + Clone> Bag<T> {
-    fn add(&mut self, x: T) {
-        let mut uset = KeyValues {
-            key: x,
-            values: Vec::new(),
-        };
-        if let Some(mut u_set) = self.0.take(&uset) {
-            u_set.values.push(uset.key);
-            self.0.replace(u_set);
-        } else {
-            uset.values.push(uset.key.clone());
-            self.0.insert(uset);
+    // 通常のUSet
+    impl ToKey for i32 {
+        type Key = i32;
+        fn compare_to_key(&self, key: &i32) -> bool {
+            *self == *key
         }
     }
-    fn remove(&mut self, x: T) -> bool {
-        self.0.remove(&KeyValues {
-            key: x,
-            values: Vec::new(),
-        })
+    let mut bag: Bag<i32> = Bag::new();
+    println!("add 1: {:?}", bag.add(1));
+    println!("find: {:?}, size: {:?}", bag.find(&1), bag.size());
+    println!("add 2: {:?}", bag.add(2));
+    println!("find: {:?}, size: {:?}", bag.find(&2), bag.size());
+    println!("add 3: {:?}", bag.add(3));
+    println!("find: {:?}, size: {:?}", bag.find(&3), bag.size());
+
+    println!("find: {:?}", bag.find_all(&1));
+    println!("find: {:?}", bag.find_all(&2));
+    println!("find: {:?}", bag.find_all(&3));
+
+    println!("remove 1: {:?}", bag.remove(&1));
+    println!("find: {:?}, size: {:?}", bag.find(&1), bag.size());
+    println!("remove 2: {:?}", bag.remove(&2));
+    println!("find: {:?}, size: {:?}", bag.find(&2), bag.size());
+    println!("remove 3: {:?}", bag.remove(&3));
+    println!("find: {:?}, size: {:?}", bag.find(&3), bag.size());
+
+    println!("add 4: {:?}", bag.add(4));
+    println!("add 4: {:?}", bag.add(4));
+    println!(
+        "find: {:?}, find_all: {:?}, size: {:?}",
+        bag.find(&4),
+        bag.find_all(&4),
+        bag.size()
+    );
+
+    println!("");
+    // 四捨五入して一致する同じ整数値になる値はすべて同値とみなす
+    impl ToKey for f32 {
+        type Key = f32;
+        fn compare_to_key(&self, key: &f32) -> bool {
+            (*self).round() == (*key).round()
+        }
     }
 
-    fn find(&mut self, x: T) -> Option<&T> {
-        let kv = KeyValues {
-            key: x,
-            values: Vec::new(),
-        };
-        if let Some(kv) = self.0.get(&kv) {
-            kv.values.first()
+    let mut bag: Bag<f32> = Bag::new();
+    println!("add 1: {:?}", bag.add(1.3));
+    println!("add 1: {:?}", bag.add(1.4));
+    println!("add 2: {:?}", bag.add(1.5));
+    println!(
+        "find1: {:?}, find_all1: {:?}",
+        bag.find(&1.2),
+        bag.find_all(&1.2)
+    );
+    println!("add 2: {:?}", bag.add(2.4));
+    println!("add 3: {:?}", bag.add(2.5));
+    println!(
+        "find2: {:?}, find_all2: {:?}",
+        bag.find(&2.2),
+        bag.find_all(&2.2),
+    );
+    println!("remove 1: {:?}", bag.remove(&1.2));
+    println!("remove 2: {:?}", bag.remove(&1.6));
+    println!(
+        "find_all1: {:?}, find_all2: {:?}",
+        bag.find(&1.4),
+        bag.find_all(&1.5),
+    );
+}
+
+trait ToKey {
+    type Key;
+    fn compare_to_key(&self, key: &Self::Key) -> bool;
+}
+
+struct USet<T: ToKey>(Vec<T>);
+
+impl<T: ToKey<Key = T>> USet<T> {
+    fn new() -> USet<T> {
+        USet(Vec::new())
+    }
+    fn size(&self) -> usize {
+        self.0.len()
+    }
+
+    fn add(&mut self, x: T) -> bool {
+        if self.0.len() == 0 {
+            self.0.push(x);
+            return true;
+        }
+        if let Some(_) = self.0.iter().find(|e| e.compare_to_key(&x)) {
+            false
         } else {
-            None
+            self.0.push(x);
+            true
         }
     }
-    fn find_all(&mut self, x: T) -> Option<&Vec<T>> {
-        let kv = KeyValues {
-            key: x,
-            values: Vec::new(),
-        };
-        if let Some(kv) = self.0.get(&kv) {
-            Some(&kv.values)
+    fn remove(&mut self, x: &T) -> Option<T> {
+        self.0
+            .iter()
+            .position(|e| e.compare_to_key(x))
+            .map(|i| self.0.remove(i))
+    }
+    fn find(&self, x: &T) -> Option<&T> {
+        self.0.iter().find(|e| e.compare_to_key(x))
+    }
+}
+struct Bag<T: ToKey>(Vec<USet<T>>);
+impl<T: ToKey<Key = T>> Bag<T> {
+    fn new() -> Bag<T> {
+        Bag(Vec::new())
+    }
+    fn size(&self) -> usize {
+        self.0.iter().map(|uset| uset.size()).sum()
+    }
+
+    fn add(&mut self, x: T) -> bool {
+        if let Some(uset) = self.0.iter_mut().find(|uset| (*uset).find(&x).is_none()) {
+            uset.add(x);
         } else {
-            None
+            let mut uset = USet::new();
+            uset.add(x);
+            self.0.push(uset);
         }
+        true
+    }
+
+    fn remove(&mut self, x: &T) -> Option<T> {
+        self.0
+            .iter_mut()
+            .find(|uset| (*uset).find(&x).is_some())
+            .and_then(|uset| uset.remove(x))
+    }
+
+    fn find(&self, x: &T) -> Option<&T> {
+        self.0.iter().find_map(|uset| uset.find(x))
+    }
+
+    fn find_all(&self, x: &T) -> Vec<&T> {
+        self.0.iter().filter_map(|uset| uset.find(x)).collect()
     }
 }
